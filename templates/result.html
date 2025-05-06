@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ваш мем готов!</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Ваш шедевр:</h1>
+        <img src="{{ url_for('uploaded_file', filename=os.path.basename(meme_url)) }}" alt="Мем">
+        <a href="{{ url_for('uploaded_file', filename=os.path.basename(meme_url)) }}" download>
+            <button>Скачать мем</button>
+        </a>
+        <a href="/"><button>Создать еще</button></a>
+    </div>
+</body>
+</html>
