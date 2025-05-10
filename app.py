@@ -1,60 +1,86 @@
-from flask import Flask, render_template, request, send_from_directory
+from flask import Flask, render_template, request, send_from_directory, session
 from PIL import Image, ImageDraw, ImageFont
 import os
+from datetime import datetime
 
 app = Flask(__name__)
+app.secret_key = 'your-secret-key-123'
 app.config['UPLOAD_FOLDER'] = 'uploads'
-app.config['MEME_TEMPLATES'] = 'static/templates'
+app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024  # 2MB
 
-# Создаем папки, если их нет
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-
-
-def create_meme(image_path, top_text, bottom_text, output_path):
-    """Генерация мема с текстом"""
-    img = Image.open(image_path)
-    draw = ImageDraw.Draw(img)
-
-    # Настройки шрифта (можно заменить на свой .ttf)
-    font_size = int(img.height / 10)
-    font = ImageFont.truetype("arial.ttf", font_size)
-
-    # Рисуем верхний текст
-    text_width = draw.textlength(top_text, font=font)
-    draw.text(((img.width - text_width) / 2, 10), top_text, font=font, fill="white", stroke_width=2,
-              stroke_fill="black")
-
-    # Рисуем нижний текст
-    text_width = draw.textlength(bottom_text, font=font)
-    draw.text(((img.width - text_width) / 2, img.height - font_size - 10), bottom_text, font=font, fill="white",
-              stroke_width=2, stroke_fill="black")
-
-    img.save(output_path)
+# Шрифты
+FONTS = {
+    'impact': 'static/fonts/Impact.ttf',
+    'arial': 'static/fonts/Arial.ttf'
+}
 
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
-        # Обработка загруженного файла
-        image = request.files['image']
-        top_text = request.form['top_text']
-        bottom_text = request.form['bottom_text']
+        # Получаем данные формы
+        top_text = request.form.get('top_text', '')
+        bottom_text = request.form.get('bottom_text', '')
+        font = request.form.get('font', 'impact')
+        color = request.form.get('color', '#ffffff')
 
-        if image:
-            image_path = os.path.join(app.config['UPLOAD_FOLDER'], image.filename)
-            image.save(image_path)
+        # Обработка изображения
+        if 'image' in request.files:
+            file = request.files['image']
+            if file.filename != '':
+                filename = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+                file.save(filename)
+                image_path = filename
         else:
-            # Используем шаблон, если файл не загружен
-            template = request.form.get('template', 'default.png')
-            image_path = os.path.join(app.config['MEME_TEMPLATES'], template)
+            image_path = os.path.join('static', 'templates', 'default.jpg')
 
-        # Генерируем мем
-        output_path = os.path.join(app.config['UPLOAD_FOLDER'], 'meme_' + os.path.basename(image_path))
-        create_meme(image_path, top_text, bottom_text, output_path)
+        # Генерация мема
+        output_filename = f'meme_{datetime.now().strftime("%Y%m%d%H%M%S")}.jpg'
+        output_path = os.path.join(app.config['UPLOAD_FOLDER'], output_filename)
+        generate_meme(image_path, top_text, bottom_text, font, color, output_path)
 
-        return render_template('result.html', meme_url=output_path)
+        # Сохраняем в историю
+        if 'history' not in session:
+            session['history'] = []
+        session['history'].insert(0, {
+            'filename': output_filename,
+            'date': datetime.now().strftime("%Y-%m-%d %H:%M")
+        })
+
+        return send_from_directory(app.config['UPLOAD_FOLDER'], output_filename, as_attachment=True)
 
     return render_template('index.html')
+
+
+def generate_meme(image_path, top_text, bottom_text, font_name, color, output_path):
+    img = Image.open(image_path)
+    if img.mode == 'RGBA':
+        img = img.convert('RGB')
+
+    draw = ImageDraw.Draw(img)
+    font_size = int(img.height / 8)
+
+    try:
+        font = ImageFont.truetype(FONTS[font_name], font_size)
+    except:
+        font = ImageFont.load_default()
+
+    # Рисуем текст
+    def draw_text(text, y):
+        text_width = draw.textlength(text, font=font)
+        draw.text(
+            ((img.width - text_width) / 2, y),
+            text,
+            font=font,
+            fill=color,
+            stroke_width=3,
+            stroke_fill='black'
+        )
+
+    draw_text(top_text, 10)
+    draw_text(bottom_text, img.height - font_size - 20)
+
+    img.save(output_path, quality=95)
 
 
 @app.route('/uploads/<filename>')
@@ -63,4 +89,5 @@ def uploaded_file(filename):
 
 
 if __name__ == '__main__':
+    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
     app.run(debug=True)
