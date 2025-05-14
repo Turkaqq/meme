@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="gallery-container">
+    <h1>Выберите шаблон</h1>
+    <div class="template-grid">
+        {% for name, file in templates.items() %}
+        <div class="template-card {% if name == selected_template %}selected{% endif %}">
+            <img src="{{ url_for('static', filename='templates/' + file) }}"
+                 alt="{{ name }}"
+                 onclick="selectTemplate('{{ name }}')">
+            <div class="template-name">{{ name }}</div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/gallery.js') }}"></script>
+{% endblock %}

@@ -1,60 +1,50 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Редактор мемов</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <div class="editor-container">
+        <h1>Редактор мемов</h1>
 
-{% block content %}
-    <h1>Генератор мемов</h1>
-    
-    <div class="meme-editor">
-        <div class="preview-container">
-            <img id="meme-preview" src="{{ url_for('static', filename='templates/default.jpg') }}">
-            <div id="top-text-preview" class="meme-text top-text"></div>
-            <div id="bottom-text-preview" class="meme-text bottom-text"></div>
-        </div>
-        
-        <form id="meme-form" method="POST" enctype="multipart/form-data">
-            <div class="form-group">
-                <label for="image-upload">Изображение:</label>
-                <input type="file" id="image-upload" name="image" accept="image/*">
-            </div>
-            
-            <div class="form-group">
-                <label for="top-text">Текст сверху:</label>
-                <input type="text" id="top-text" name="top_text" maxlength="50">
-            </div>
-            
-            <div class="form-group">
-                <label for="bottom-text">Текст снизу:</label>
-                <input type="text" id="bottom-text" name="bottom_text" maxlength="50">
-            </div>
-            
-            <div class="form-group">
-                <label for="font-select">Шрифт:</label>
-                <select id="font-select" name="font">
-                    <option value="impact">Impact</option>
-                    <option value="arial">Arial</option>
+        <div class="editor">
+            <!-- Блок выбора шаблона -->
+            <div class="template-selector">
+                <label>Выберите шаблон:</label>
+                <select id="template-select">
+                    {% for template in templates %}
+                    <option value="{{ template }}">{{ template }}</option>
+                    {% endfor %}
                 </select>
             </div>
-            
-            <div class="form-group">
-                <label for="text-color">Цвет текста:</label>
-                <input type="color" id="text-color" name="color" value="#ffffff">
+
+            <!-- Холст для редактирования -->
+            <div class="meme-canvas-container">
+                <div class="canvas-wrapper">
+                    <img id="meme-template" src="/static/templates/{{ templates[0] }}">
+                    <div class="text-editor top-text" contenteditable="true">Введите текст</div>
+                    <div class="text-editor bottom-text" contenteditable="true">Введите текст</div>
+                </div>
             </div>
-            
-            <button type="submit">Создать мем</button>
-        </form>
-        
-        {% if 'history' in session and session['history'] %}
-        <div class="history">
-            <h2>История мемов</h2>
-            <ul>
-                {% for item in session['history'] %}
-                <li>
-                    <a href="{{ url_for('uploaded_file', filename=item.filename) }}" download>
-                        Мем от {{ item.date }}
-                    </a>
-                </li>
-                {% endfor %}
-            </ul>
+
+            <!-- Панель инструментов -->
+            <div class="tool-panel">
+                <div class="form-group">
+                    <label>Цвет текста:</label>
+                    <input type="color" id="text-color" value="#ffffff">
+                </div>
+
+                <div class="form-group">
+                    <label>Размер текста:</label>
+                    <input type="range" id="text-size" min="10" max="72" value="24">
+                </div>
+
+                <button id="generate-btn">Создать мем</button>
+            </div>
         </div>
-        {% endif %}
     </div>
-{% endblock %}
+
+    <script src="/static/js/editor.js"></script>
+</body>
+</html>
