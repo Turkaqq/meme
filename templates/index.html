@@ -1,17 +1,22 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-    <title>Редактор мемов</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Генератор мемов</title>
     <link rel="stylesheet" href="/static/css/styles.css">
 </head>
 <body>
     <div class="editor-container">
-        <h1>Редактор мемов</h1>
+        <div id="meme-container">
+            <img class="meme-img" src="/static/templates/{{ templates[0] }}">
+        </div>
 
-        <div class="editor">
-            <!-- Блок выбора шаблона -->
-            <div class="template-selector">
-                <label>Выберите шаблон:</label>
+        <div class="tool-panel">
+            <h2>Редактор мемов</h2>
+
+            <div class="form-group">
+                <label for="template-select">Шаблон:</label>
                 <select id="template-select">
                     {% for template in templates %}
                     <option value="{{ template }}">{{ template }}</option>
@@ -19,29 +24,38 @@
                 </select>
             </div>
 
-            <!-- Холст для редактирования -->
-            <div class="meme-canvas-container">
-                <div class="canvas-wrapper">
-                    <img id="meme-template" src="/static/templates/{{ templates[0] }}">
-                    <div class="text-editor top-text" contenteditable="true">Введите текст</div>
-                    <div class="text-editor bottom-text" contenteditable="true">Введите текст</div>
-                </div>
+            <div class="form-group">
+                <label>Загрузить свой шаблон:</label>
+                <input type="file" id="template-upload" accept="image/*" style="display: none;">
+                <button class="btn btn-secondary" onclick="document.getElementById('template-upload').click()">
+                    Выбрать файл
+                </button>
             </div>
 
-            <!-- Панель инструментов -->
-            <div class="tool-panel">
-                <div class="form-group">
-                    <label>Цвет текста:</label>
-                    <input type="color" id="text-color" value="#ffffff">
-                </div>
-
-                <div class="form-group">
-                    <label>Размер текста:</label>
-                    <input type="range" id="text-size" min="10" max="72" value="24">
-                </div>
-
-                <button id="generate-btn">Создать мем</button>
+            <div class="form-group">
+                <label for="text-color">Цвет текста:</label>
+                <input type="color" id="text-color" value="#ffffff">
             </div>
+
+            <div class="form-group">
+                <label for="text-size">Размер текста: <span id="text-size-value">40px</span></label>
+                <input type="range" id="text-size" min="10" max="72" value="40">
+            </div>
+
+            <div class="form-group">
+                <label>Добавить изображение:</label>
+                <input type="file" id="overlay-input" accept="image/*" style="display: none;">
+                <button class="btn btn-secondary" onclick="document.getElementById('overlay-input').click()">
+                    Выбрать изображение
+                </button>
+            </div>
+
+            <div class="button-group">
+                <button id="clear-btn" class="btn btn-danger">Очистить все</button>
+                <button id="generate-btn" class="btn btn-primary">Создать мем</button>
+            </div>
+
+            <div id="meme-result"></div>
         </div>
     </div>
 
