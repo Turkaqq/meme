@@ -1,61 +1,49 @@
-from flask import Flask, request, jsonify, render_template, send_from_directory
+from flask import Flask, render_template, request, jsonify, send_from_directory
 from PIL import Image, ImageDraw, ImageFont
 import os
 import uuid
 
 app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = 'static/uploads'
-app.config['TEMPLATES_FOLDER'] = 'static/templates'
-app.config['FONTS_FOLDER'] = 'static/fonts'
-app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg'}
 
+# Конфигурация
+UPLOAD_FOLDER = 'static/uploads'
+TEMPLATES_FOLDER = 'static/templates'
+FONTS_FOLDER = 'static/fonts'
 
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
-
-
-def get_font(size):
-    try:
-        # Пробуем загрузить Impact, если есть
-        impact_path = os.path.join(app.config['FONTS_FOLDER'], 'Impact.ttf')
-        if os.path.exists(impact_path):
-            return ImageFont.truetype(impact_path, size)
-
-        # Пробуем другие стандартные шрифты
-        try:
-            return ImageFont.truetype("arial.ttf", size)
-        except:
-            return ImageFont.truetype("LiberationSans-Regular.ttf", size)
-    except:
-        # Если ничего не найдено, используем стандартный шрифт
-        return ImageFont.load_default(size)
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(TEMPLATES_FOLDER, exist_ok=True)
+os.makedirs(FONTS_FOLDER, exist_ok=True)
 
 
 @app.route('/')
 def index():
-    templates = [f for f in os.listdir(app.config['TEMPLATES_FOLDER']) if allowed_file(f)]
+    templates = [f for f in os.listdir(TEMPLATES_FOLDER)
+                 if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
     return render_template('index.html', templates=templates)
 
 
 @app.route('/generate', methods=['POST'])
 def generate_meme():
     try:
-        data = request.get_json()
-        template = data['template']
-        texts = data['texts']
+        # Получаем данные из запроса
+        template = request.form.get('template')
+        text_data = request.form.get('text_data')
 
-        # Открываем изображение шаблона
-        template_path = os.path.join(app.config['TEMPLATES_FOLDER'], template)
-        if not os.path.exists(template_path):
-            return jsonify({'success': False, 'error': 'Template not found'})
+        # Проверяем наличие необходимых данных
+        if not template or not text_data:
+            return jsonify({'success': False, 'error': 'Missing required data'})
 
-        img = Image.open(template_path).convert('RGBA')
+        # Загружаем изображение шаблона
+        img_path = os.path.join(TEMPLATES_FOLDER, template)
+        img = Image.open(img_path).convert('RGBA')
         draw = ImageDraw.Draw(img)
 
-        # Добавляем текст
+        # Обрабатываем текст
+        texts = eval(text_data)  # Безопасный способ преобразования строки в список
+
         for text in texts:
             try:
-                font = get_font(text['size'])
+                font = ImageFont.truetype(os.path.join(FONTS_FOLDER, 'impact.ttf'), text['size'])
                 draw.text(
                     (text['x'], text['y']),
                     text['content'],
@@ -65,33 +53,27 @@ def generate_meme():
                     stroke_fill='white'
                 )
             except Exception as e:
-                print(f"Error adding text: {e}")
+                print(f"Ошибка при добавлении текста: {e}")
                 continue
 
         # Сохраняем результат
-        output_filename = f"meme_{uuid.uuid4().hex}.png"
-        output_path = os.path.join(app.config['UPLOAD_FOLDER'], output_filename)
-
-        # Создаем папку, если не существует
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        img.save(output_path)
+        filename = f"meme_{uuid.uuid4().hex}.png"
+        save_path = os.path.join(UPLOAD_FOLDER, filename)
+        img.save(save_path)
 
         return jsonify({
             'success': True,
-            'url': f'/static/uploads/{output_filename}'
+            'url': f"/static/uploads/{filename}"
         })
 
     except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        })
+        return jsonify({'success': False, 'error': str(e)})
+
+
+@app.route('/static/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(UPLOAD_FOLDER, filename)
 
 
 if __name__ == '__main__':
-    # Создаем все необходимые папки
-    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-    os.makedirs(app.config['TEMPLATES_FOLDER'], exist_ok=True)
-    os.makedirs(app.config['FONTS_FOLDER'], exist_ok=True)
-
-    app.run(debug=True)
+    app.run(debug=True, port=5001)

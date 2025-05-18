@@ -1,92 +1,178 @@
+:root {
+    --primary-color: #4285f4;
+    --secondary-color: #fbbc05;
+    --danger-color: #ea4335;
+    --success-color: #34a853;
+    --text-color: #333;
+    --bg-color: #f5f5f5;
+    --border-color: #ddd;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
 body {
-    font-family: Arial, sans-serif;
-    margin: 20px;
-    background: #f5f5f5;
+    font-family: 'Roboto', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    padding: 20px;
 }
 
 .editor-container {
     display: grid;
-    grid-template-columns: 1fr 300px;
-    gap: 20px;
+    grid-template-columns: 1fr 350px;
+    gap: 30px;
     max-width: 1200px;
     margin: 0 auto;
     background: white;
-    padding: 20px;
+    padding: 30px;
     border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
 
-#meme-container {
-    position: relative;
-    background: #f0f0f0;
+.meme-area {
+    background-color: #f8f8f8;
     border-radius: 8px;
-    min-height: 500px;
+    padding: 20px;
     display: flex;
-    align-items: center;
     justify-content: center;
-    border: 2px dashed #ccc;
-    overflow: hidden;
+    align-items: center;
 }
 
-.meme-img {
+#meme-canvas {
+    position: relative;
+    width: 100%;
+    height: 500px;
+    overflow: hidden;
+    border: 2px dashed var(--border-color);
+    border-radius: 8px;
+}
+
+#template-image {
     max-width: 100%;
-    max-height: 80vh;
+    max-height: 100%;
     object-fit: contain;
 }
 
-.tool-panel {
-    background: #f9f9f9;
-    padding: 20px;
-    border-radius: 8px;
+.control-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
 }
 
 .form-group {
     margin-bottom: 15px;
 }
 
-label {
+.form-group label {
     display: block;
     margin-bottom: 5px;
-    font-weight: bold;
+    font-weight: 500;
 }
 
-input, select {
+input[type="text"],
+select {
     width: 100%;
-    padding: 8px;
-    border: 1px solid #ddd;
+    padding: 10px;
+    border: 1px solid var(--border-color);
     border-radius: 4px;
 }
 
-button {
-    background: #4CAF50;
-    color: white;
+input[type="color"] {
+    width: 50px;
+    height: 30px;
+    padding: 0;
     border: none;
+}
+
+input[type="range"] {
+    width: 100%;
+}
+
+.button-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.btn {
     padding: 10px 15px;
-    cursor: pointer;
+    border: none;
     border-radius: 4px;
-    font-size: 16px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.btn-secondary {
+    background-color: var(--secondary-color);
+    color: white;
+}
+
+.btn-success {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.btn-download {
+    background-color: var(--primary-color);
+    color: white;
+    text-decoration: none;
+    display: inline-block;
+    margin-top: 15px;
+    text-align: center;
+}
+
+.btn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+.result-area {
+    margin-top: 30px;
+    padding: 15px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+#meme-result {
     margin-top: 10px;
+}
+
+#meme-result img {
+    max-width: 100%;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
 }
 
 .meme-text {
     position: absolute;
-    cursor: move;
+    font-family: Impact, sans-serif;
     font-weight: bold;
+    color: black;
+    text-shadow:
+        2px 2px 0 #fff,
+        -2px -2px 0 #fff,
+        2px -2px 0 #fff,
+        -2px 2px 0 #fff;
+    cursor: move;
     user-select: none;
+    padding: 5px;
+    white-space: nowrap;
 }
 
-.generated-meme {
-    max-width: 100%;
-    margin-top: 20px;
-    border: 1px solid #ddd;
-}
-
-.download-btn {
-    display: inline-block;
-    margin-top: 10px;
-    padding: 8px 15px;
-    background: #2196F3;
-    color: white;
-    text-decoration: none;
-    border-radius: 4px;
+@media (max-width: 768px) {
+    .editor-container {
+        grid-template-columns: 1fr;
+        padding: 15px;
+    }
 }
